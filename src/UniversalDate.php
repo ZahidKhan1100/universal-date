@@ -99,13 +99,26 @@ class UniversalDate
     public function toTimeAgo(): string
     {
         $now = new DateTime('now', new DateTimeZone($this->timezone));
-        $diff = $now->diff($this->dateTime);
         $interval = $this->dateTime->getTimestamp() - $now->getTimestamp();
-
+        $diff = $now->diff($this->dateTime);
+        
+        // Use absolute interval for threshold checks
+        $absInterval = abs($interval);
+        
+        // For very recent past (within last 30 seconds)
+        if ($interval < 0 && $absInterval <= 30) {
+            return 'just now';
+        }
+        
+        // For very near future (within next 30 seconds)
+        if ($interval > 0 && $absInterval <= 30) {
+            return 'soon';
+        }
+        
         if ($interval > 0) {
             return $this->getFutureString($diff);
         }
-
+        
         return $this->getPastString($diff);
     }
 
@@ -138,7 +151,8 @@ class UniversalDate
         if ($diff->m > 0) return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '');
         if ($diff->d > 0) return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
         if ($diff->h > 0) return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
-        if ($diff->i > 0) return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
+        if ($diff->i > 1) return 'in ' . $diff->i . ' minutes';
+        if ($diff->i == 1) return 'in 1 minute';
         
         return 'soon';
     }

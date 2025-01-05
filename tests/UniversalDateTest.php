@@ -55,25 +55,22 @@ class UniversalDateTest extends TestCase
         $this->assertEquals('2 hours ago', $date->toTimeAgo());
     }
 
-    /** @test */
     public function it_handles_time_ago_for_future_dates()
     {
-        // Use a fixed reference point
-        $baseDate = new DateTime('2024-01-01 12:00:00');
-        $threeMonthsLater = clone $baseDate;
-        $threeMonthsLater->modify('+3 months');
+        $date = new UniversalDate('2024-01-01 12:00:00');
         
-        // Create a UniversalDate instance from the future date
-        $date = new UniversalDate($threeMonthsLater);
+        // Test different future intervals
+        $this->assertEquals('soon', UniversalDate::make('+10 seconds')->toTimeAgo());
+        $this->assertEquals('in 1 minute', UniversalDate::make('+1 minute')->toTimeAgo());
+        $this->assertEquals('in 2 hours', UniversalDate::make('+2 hours')->toTimeAgo());
+        $this->assertEquals('in 1 day', UniversalDate::make('+1 day')->toTimeAgo());
+        $this->assertEquals('in 1 month', UniversalDate::make('+1 month')->toTimeAgo());
+        $this->assertEquals('in 1 year', UniversalDate::make('+1 year')->toTimeAgo());
         
-        // Mock the current time in UniversalDate
-        $reflectionClass = new \ReflectionClass($date);
-        $dateTimeProperty = $reflectionClass->getProperty('dateTime');
-        $dateTimeProperty->setAccessible(true);
-        $dateTimeProperty->setValue($date, $threeMonthsLater);
-        
-        // Test relative to the base date
-        $this->assertEquals('in 3 months', $date->toTimeAgo());
+        // Test plural forms
+        $this->assertEquals('in 2 days', UniversalDate::make('+2 days')->toTimeAgo());
+        $this->assertEquals('in 3 months', UniversalDate::make('+3 months')->toTimeAgo());
+        $this->assertEquals('in 2 years', UniversalDate::make('+2 years')->toTimeAgo());
     }
 
     /** @test */
