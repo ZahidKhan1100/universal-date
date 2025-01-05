@@ -11,9 +11,9 @@ use MuhammadZahid\UniversalDate\UniversalDate;
 class UniversalDateTest extends TestCase
 {
     /**
-    * @test
-    * @dataProvider dateFormatProvider
-    */
+     * @test
+     * @dataProvider dateFormatProvider
+     */
     public function it_accepts_different_date_formats($input, $expectedTimestamp)
     {
         $date = new UniversalDate($input);
@@ -56,9 +56,9 @@ class UniversalDateTest extends TestCase
     }
 
     /**
-    * @test
-    * @dataProvider timeDifferenceProvider
-    */
+     * @test
+     * @dataProvider timeDifferenceProvider
+     */
     public function it_handles_time_ago_for_future_dates($input, $expected)
     {
         $result = UniversalDate::make($input)->toTimeAgo();
@@ -108,9 +108,15 @@ class UniversalDateTest extends TestCase
             'year_1_over' => ['+13 months', 'in 1 year'],
             'year_2' => ['+2 years', 'in 2 years'],
             'year_2.5' => ['+2 years 6 months', 'in 2 years'],
-            'year_5' => ['+5 years', 'in 5 years']
+            'year_5' => ['+5 years', 'in 5 years'],
+            
+            // Additional edge cases
+            'year_0.9' => ['+11 months', 'in 11 months'],
+            'year_0.95' => ['+11 months 15 days', 'in 1 year'],
+            'year_1.1' => ['+13 months', 'in 1 year'],
+            'day_0.9' => ['+22 hours', 'in 22 hours'],
+            'day_0.95' => ['+23 hours', 'in 1 day']
         ];
-    }
     }
 
     /** @test */
@@ -159,4 +165,3 @@ class UniversalDateTest extends TestCase
         $this->assertEquals('soon', $date->toTimeAgo());
     }
 }
-

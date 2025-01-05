@@ -57,71 +57,109 @@ class UniversalDate
     public function toTimeAgo(): string
     {
         $now = new DateTime('now', new DateTimeZone($this->timezone));
-        $interval = $this->dateTime->getTimestamp() - $now->getTimestamp();
         $diff = $now->diff($this->dateTime);
-        
-        if ($interval > 0) {
+    
+        if ($this->dateTime > $now) {
             return $this->getFutureString($diff);
         }
-        
+    
         return $this->getPastString($diff);
     }
+    
 
     private function getFutureString(\DateInterval $diff): string
     {
-        // Less than 60 seconds
-        if ($diff->i === 0 && $diff->h === 0 && $diff->d === 0 && $diff->m === 0 && $diff->y === 0) {
-            return 'soon';
-        }
-
         // Years
         if ($diff->y > 0) {
+            $remainingMonths = $diff->m;
+            if ($remainingMonths > 0) {
+                return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . $remainingMonths . ' month' . ($remainingMonths > 1 ? 's' : '');
+            }
             return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
         }
-
+    
         // Months
-        $totalMonths = ($diff->y * 12) + $diff->m;
-        if ($totalMonths > 0) {
-            return 'in ' . $totalMonths . ' month' . ($totalMonths > 1 ? 's' : '');
+        if ($diff->m > 0) {
+            $remainingDays = $diff->d;
+            if ($remainingDays > 0) {
+                return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $remainingDays . ' day' . ($remainingDays > 1 ? 's' : '');
+            }
+            return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '');
         }
-
+    
         // Days
         if ($diff->d > 0) {
+            $remainingHours = $diff->h;
+            if ($remainingHours > 0) {
+                return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $remainingHours . ' hour' . ($remainingHours > 1 ? 's' : '');
+            }
             return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
         }
-
+    
         // Hours
         if ($diff->h > 0) {
-            if ($diff->i >= 45) {
-                return 'in ' . ($diff->h + 1) . ' hour' . (($diff->h + 1) > 1 ? 's' : '');
+            $remainingMinutes = $diff->i;
+            if ($remainingMinutes > 0) {
+                return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $remainingMinutes . ' minute' . ($remainingMinutes > 1 ? 's' : '');
             }
             return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
         }
-
-        // 45+ minutes shows as 1 hour
-        if ($diff->i >= 45) {
-            return 'in 1 hour';
-        }
-
+    
         // Minutes
         if ($diff->i > 0) {
             return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
         }
-
-        return 'in 1 minute';
+    
+        return 'soon';
     }
+    
 
     private function getPastString(\DateInterval $diff): string
     {
-        if ($diff->y > 0) return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
-        if ($diff->m > 0) return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
-        if ($diff->d > 0) return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
-        if ($diff->h > 0) return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
-        if ($diff->i > 0) return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
-        
+        // Years
+        if ($diff->y > 0) {
+            $remainingMonths = $diff->m;
+            if ($remainingMonths > 0) {
+                return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . $remainingMonths . ' month' . ($remainingMonths > 1 ? 's' : '') . ' ago';
+            }
+            return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
+        }
+    
+        // Months
+        if ($diff->m > 0) {
+            $remainingDays = $diff->d;
+            if ($remainingDays > 0) {
+                return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $remainingDays . ' day' . ($remainingDays > 1 ? 's' : '') . ' ago';
+            }
+            return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
+        }
+    
+        // Days
+        if ($diff->d > 0) {
+            $remainingHours = $diff->h;
+            if ($remainingHours > 0) {
+                return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $remainingHours . ' hour' . ($remainingHours > 1 ? 's' : '') . ' ago';
+            }
+            return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
+        }
+    
+        // Hours
+        if ($diff->h > 0) {
+            $remainingMinutes = $diff->i;
+            if ($remainingMinutes > 0) {
+                return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $remainingMinutes . ' minute' . ($remainingMinutes > 1 ? 's' : '') . ' ago';
+            }
+            return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
+        }
+    
+        // Minutes
+        if ($diff->i > 0) {
+            return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
+        }
+    
         return 'just now';
     }
-
+    
     public function format(string $format): string
     {
         return $this->dateTime->format($format);
