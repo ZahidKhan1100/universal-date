@@ -102,24 +102,59 @@ class UniversalDate
         $interval = $this->dateTime->getTimestamp() - $now->getTimestamp();
         $diff = $now->diff($this->dateTime);
         
-        // Use absolute interval for threshold checks
-        $absInterval = abs($interval);
-        
-        // For very recent past (within last 30 seconds)
-        if ($interval < 0 && $absInterval <= 30) {
-            return 'just now';
-        }
-        
-        // For very near future (within next 30 seconds)
-        if ($interval > 0 && $absInterval <= 30) {
-            return 'soon';
-        }
-        
         if ($interval > 0) {
-            return $this->getFutureString($diff);
+            return $this->getFutureString($diff, $interval);
         }
         
         return $this->getPastString($diff);
+    }
+
+    /**
+     * Get future time difference string
+     * 
+     * @param \DateInterval $diff
+     * @param int $interval Seconds until the future date
+     * @return string
+     */
+    private function getFutureString(\DateInterval $diff, int $interval): string
+    {
+        // If less than 2 minutes away
+        if ($interval < 120) {
+            return 'soon';
+        }
+
+        // Calculate exact values
+        $totalMinutes = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
+        $totalHours = $totalMinutes / 60;
+        $totalDays = $diff->days;
+        $totalMonths = ($diff->y * 12) + $diff->m;
+
+        // Years
+        if ($totalMonths >= 23) {
+            $years = floor($totalMonths / 12);
+            return 'in ' . $years . ' year' . ($years > 1 ? 's' : '');
+        }
+
+        // Months (if more than 30 days)
+        if ($totalDays >= 30) {
+            $months = ceil($totalDays / 30);
+            return 'in ' . $months . ' month' . ($months > 1 ? 's' : '');
+        }
+
+        // Days (if more than 23 hours)
+        if ($totalHours >= 23.5) {
+            $days = ceil($totalHours / 24);
+            return 'in ' . $days . ' day' . ($days > 1 ? 's' : '');
+        }
+
+        // Hours (if more than 90 minutes)
+        if ($totalMinutes >= 90) {
+            $hours = ceil($totalMinutes / 60);
+            return 'in ' . $hours . ' hour' . ($hours > 1 ? 's' : '');
+        }
+
+        // Minutes
+        return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
     }
 
     /**
@@ -137,55 +172,6 @@ class UniversalDate
         if ($diff->i > 0) return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
         
         return 'just now';
-    }
-
-    /**
-     * Get future time difference string
-     * 
-     * @param \DateInterval $diff
-     * @return string
-     */
-    private function getFutureString(\DateInterval $diff): string
-    {
-        // Calculate total minutes/hours/days for accurate thresholds
-        $totalMinutes = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
-        $totalHours = $totalMinutes / 60;
-        $totalDays = $totalMinutes / (24 * 60);
-        
-        // Years
-        if ($diff->y > 0) {
-            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
-        }
-        
-        // Months (only if more than 30 days)
-        if ($diff->m > 0 || $totalDays >= 30) {
-            $months = $diff->m + floor($totalDays / 30);
-            return 'in ' . $months . ' month' . ($months > 1 ? 's' : '');
-        }
-        
-        // Days (show if more than 24 hours)
-        if ($totalHours >= 24) {
-            $days = floor($totalDays);
-            return 'in ' . $days . ' day' . ($days > 1 ? 's' : '');
-        }
-        
-        // Hours (show for 45+ minutes)
-        if ($totalMinutes >= 45) {
-            $hours = ceil($totalHours);
-            return 'in ' . $hours . ' hour' . ($hours > 1 ? 's' : '');
-        }
-        
-        // Minutes (show for 2+ minutes)
-        if ($totalMinutes >= 2) {
-            return 'in ' . floor($diff->i) . ' minutes';
-        }
-        
-        // Very near future
-        if ($totalMinutes >= 1) {
-            return 'in 1 minute';
-        }
-        
-        return 'soon';
     }
 
     /**
