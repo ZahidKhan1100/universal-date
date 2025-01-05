@@ -61,50 +61,73 @@ class UniversalDate
         $diff = $now->diff($this->dateTime);
         
         if ($interval > 0) {
-            return $this->getFutureString($diff);
+            return $this->getFutureString($diff, $interval);
         }
         
         return $this->getPastString($diff);
     }
 
-    private function getFutureString(\DateInterval $diff): string
+    private function getFutureString(\DateInterval $diff, int $interval): string
     {
-        // Calculate all intervals exactly
-        $totalMinutes = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
-        
-        // Less than 1 minute = soon
-        if ($totalMinutes < 1) {
+        // Handle intervals less than 60 seconds
+        if ($interval < 60) {
             return 'soon';
         }
 
-        // Years calculation (use exact months)
-        $totalMonths = ($diff->y * 12) + $diff->m;
-        if ($totalMonths >= 12) {
-            $years = floor($totalMonths / 12);
-            return 'in ' . $years . ' year' . ($years > 1 ? 's' : '');
+        // Years
+        if ($diff->y > 0) {
+            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
         }
 
-        // Months calculation (30 days = 1 month)
-        if ($diff->days >= 30 || $totalMonths > 0) {
-            $months = $totalMonths > 0 ? $totalMonths : floor($diff->days / 30);
+        // Calculate total months including partial months
+        $totalMonths = ($diff->y * 12) + $diff->m;
+        if ($diff->d >= 15) { // If more than half a month
+            $totalMonths++;
+        }
+
+        // 12 or more months should be shown as 1 year
+        if ($totalMonths >= 12) {
+            return 'in 1 year';
+        }
+
+        // Months (if we have months or 30+ days)
+        if ($diff->m > 0 || $diff->d >= 30) {
+            $months = $diff->m;
+            if ($diff->d >= 15) { // Round up month if we're past the middle
+                $months++;
+            }
             return 'in ' . $months . ' month' . ($months > 1 ? 's' : '');
         }
 
-        // Days calculation (23 hours = 1 day)
-        $totalHours = ($diff->days * 24) + $diff->h;
-        if ($totalHours >= 23) {
-            $days = ceil($totalHours / 24);
+        // Calculate total hours
+        $totalHours = ($diff->d * 24) + $diff->h;
+        $extraMinutes = $diff->i;
+
+        // Days (23+ hours should show as next day)
+        if ($totalHours >= 23 && $extraMinutes >= 30) {
+            $days = $diff->d + 1;
             return 'in ' . $days . ' day' . ($days > 1 ? 's' : '');
         }
 
-        // Hours calculation (45 minutes = 1 hour)
-        if ($totalMinutes >= 45) {
-            $hours = ceil($totalMinutes / 60);
+        if ($diff->d > 0) {
+            return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
+        }
+
+        // Hours (45+ minutes should show as next hour)
+        if ($diff->h > 0 || $diff->i >= 45) {
+            $hours = $diff->h;
+            if ($diff->i >= 45) {
+                $hours++;
+            }
             return 'in ' . $hours . ' hour' . ($hours > 1 ? 's' : '');
         }
 
-        // Minutes (exact minutes)
-        return 'in ' . ceil($totalMinutes) . ' minute' . (ceil($totalMinutes) > 1 ? 's' : '');
+        // Minutes
+        if ($diff->i > 0) {
+            return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
+        }
+
+        return 'in 1 minute';
     }
 
     private function getPastString(\DateInterval $diff): string
