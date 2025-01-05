@@ -1,0 +1,39 @@
+{
+    "name": "muhammad-zahid/universaldate",
+    "description": "This package will convert any type of date to human readable date",
+    "type": "library",
+    "require": {
+        "php": "^7.4",
+        "illuminate/support": "^8.0|^9.0|^10.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Muhammad Zahid"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MuhammadZahid\\UniversalDate\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MuhammadZahid\\UniversalDate\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MuhammadZahid\\UniversalDate\\UniversalDateServiceProvider"
+            ],
+            "aliases": {
+                "UniversalDate": "MuhammadZahid\\UniversalDate\\Facades\\UniversalDate"
+            }
+        }
+    }
+}
