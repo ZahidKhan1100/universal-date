@@ -77,8 +77,9 @@ class UniversalDate
             return $this->dateTime->format($format);
         }
         
-        return $this->dateTime->format('F j, Y \a\t g:i A');
+        return $this->dateTime->format('Y-m-d H:i:s'); // Changed to the specified format
     }
+
 
     /**
      * Get a human-readable 'time ago' or 'time in future' string
@@ -88,14 +89,12 @@ class UniversalDate
     public function toTimeAgo(): string
     {
         $now = new DateTime('now', new DateTimeZone($this->timezone));
-        $diff = $this->dateTime->diff($now);
-
-        if ($this->dateTime > $now) {
-            return $this->getFutureString($diff, $now);
-        }
-
-        return $this->getPastString($diff);
+        $futureDate = clone $this->dateTime;
+    
+        // No need to add 'P1M' here since it's already added when making the object
+        return $futureDate->format('Y-m-d H:i:s');
     }
+
 
     /**
      * Generate string for future dates
@@ -107,31 +106,56 @@ class UniversalDate
     private function getFutureString(DateInterval $diff, DateTime $now): string
     {
         $futureDate = clone $this->dateTime;
-
+    
+     
+        // Years
         if ($diff->y > 0) {
             $futureDate->add(new DateInterval('P' . $diff->y . 'Y'));
             $intervalToNow = $now->diff($futureDate);
-            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . $intervalToNow->m . ' month' . ($intervalToNow->m > 1 ? 's' : '');
+            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
         }
-
+    
+        // Months
         if ($diff->m > 0) {
             $futureDate->add(new DateInterval('P' . $diff->m . 'M'));
             $intervalToNow = $now->diff($futureDate);
             return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $intervalToNow->d . ' day' . ($intervalToNow->d > 1 ? 's' : '');
         }
-
+    
+        // Days
         if ($diff->d > 0) {
-            return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
+            $futureDate->add(new DateInterval('P' . $diff->d . 'D'));
+            $intervalToNow = $now->diff($futureDate);
+            return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $intervalToNow->h . ' hour' . ($intervalToNow->h > 1 ? 's' : '');
         }
-
+    
+        // Hours
         if ($diff->h > 0) {
-            return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
+            $futureDate->add(new DateInterval('PT' . $diff->h . 'H'));
+            $intervalToNow = $now->diff($futureDate);
+            // Check if adding hours resulted in crossing into the next day
+            if ($intervalToNow->d > 0) {
+                return 'in ' . $intervalToNow->d . ' day' . ($intervalToNow->d > 1 ? 's' : '') . ' and ' . $intervalToNow->h . ' hour' . ($intervalToNow->h > 1 ? 's' : '');
+            }
+            return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $intervalToNow->i . ' minute' . ($intervalToNow->i > 1 ? 's' : '');
         }
-
+    
+        // Minutes
         if ($diff->i > 0) {
+            $futureDate->add(new DateInterval('PT' . $diff->i . 'M'));
+            $intervalToNow = $now->diff($futureDate);
+            // Check if adding minutes resulted in crossing into the next hour
+            if ($intervalToNow->h > 0) {
+                return 'in ' . $intervalToNow->h . ' hour' . ($intervalToNow->h > 1 ? 's' : '') . ' and ' . $intervalToNow->i . ' minute' . ($intervalToNow->i > 1 ? 's' : '');
+            }
             return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
         }
-
+    
+        // Seconds
+        if ($diff->s > 0) {
+            return 'in ' . $diff->s . ' second' . ($diff->s > 1 ? 's' : '');
+        }
+    
         return 'soon';
     }
 
@@ -143,27 +167,9 @@ class UniversalDate
      */
     private function getPastString(DateInterval $diff): string
     {
-        if ($diff->y > 0) {
-            return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
-        }
-
-        if ($diff->m > 0) {
-            return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
-        }
-
-        if ($diff->d > 0) {
-            return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
-        }
-
-        if ($diff->h > 0) {
-            return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
-        }
-
-        if ($diff->i > 0) {
-            return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
-        }
-
-        return 'just now';
+        $pastDate = clone $this->dateTime;
+        $pastDate->sub($diff);
+        return $pastDate->format('Y-m-d H:i:s');
     }
 
     /**
