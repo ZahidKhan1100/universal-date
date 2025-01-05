@@ -15,17 +15,36 @@ class UniversalDate
     /** @var string */
     private $timezone;
 
+    /**
+     * Constructor
+     * 
+     * @param string|DateTime $date The date to initialize with (default 'now')
+     * @param string|null $timezone The timezone for the date (default 'UTC')
+     */
     public function __construct($date = 'now', ?string $timezone = 'UTC')
     {
         $this->timezone = $timezone;
         $this->parseDate($date);
     }
 
+    /**
+     * Static method to create a new instance of UniversalDate
+     * 
+     * @param string|DateTime $date The date to initialize with (default 'now')
+     * @param string|null $timezone The timezone for the date (default 'UTC')
+     * @return static
+     */
     public static function make($date = 'now', ?string $timezone = 'UTC'): static
     {
         return new static($date, $timezone);
     }
 
+    /**
+     * Parse the input date into a DateTime object
+     * 
+     * @param string|DateTime $date The date to parse
+     * @throws Exception If the date format cannot be parsed
+     */
     private function parseDate($date): void
     {
         if ($date instanceof DateTime) {
@@ -46,6 +65,12 @@ class UniversalDate
         }
     }
 
+    /**
+     * Format the date in a human-readable way
+     * 
+     * @param string|null $format Custom format string
+     * @return string Formatted date string
+     */
     public function toHuman(?string $format = null): string
     {
         if ($format) {
@@ -55,111 +80,119 @@ class UniversalDate
         return $this->dateTime->format('F j, Y \a\t g:i A');
     }
 
+    /**
+     * Get a human-readable 'time ago' or 'time in future' string
+     * 
+     * @return string Time difference in human-readable format
+     */
     public function toTimeAgo(): string
     {
         $now = new DateTime('now', new DateTimeZone($this->timezone));
-        $diff = $now->diff($this->dateTime);
-    
+        $diff = $this->dateTime->diff($now);
+
         if ($this->dateTime > $now) {
             return $this->getFutureString($diff, $now);
         }
-    
+
         return $this->getPastString($diff);
     }
-    
 
-    private function getFutureString(\DateInterval $diff, DateTime $now): string
+    /**
+     * Generate string for future dates
+     * 
+     * @param DateInterval $diff Difference between dates
+     * @param DateTime $now Current time
+     * @return string
+     */
+    private function getFutureString(DateInterval $diff, DateTime $now): string
     {
-        // Handle Years (with precise day calculations)
+        $futureDate = clone $this->dateTime;
+
         if ($diff->y > 0) {
-            // Add the days of the remaining month
-            $remainingDaysInYear = $now->diff($this->dateTime->add(new DateInterval("P" . $diff->y . "Y")))->days;
-            $remainingMonths = $remainingDaysInYear / 30;
-            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . ceil($remainingMonths) . ' month' . ($remainingMonths > 1 ? 's' : '');
+            $futureDate->add(new DateInterval('P' . $diff->y . 'Y'));
+            $intervalToNow = $now->diff($futureDate);
+            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . $intervalToNow->m . ' month' . ($intervalToNow->m > 1 ? 's' : '');
         }
-    
-        // Handle Months (with precise day calculations)
+
         if ($diff->m > 0) {
-            // Add days to months for more accurate calculation
-            return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
+            $futureDate->add(new DateInterval('P' . $diff->m . 'M'));
+            $intervalToNow = $now->diff($futureDate);
+            return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $intervalToNow->d . ' day' . ($intervalToNow->d > 1 ? 's' : '');
         }
-    
-        // Handle Days
+
         if ($diff->d > 0) {
             return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
         }
-    
-        // Handle Hours and Minutes
+
         if ($diff->h > 0) {
             return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
         }
-    
-        // Minutes
+
         if ($diff->i > 0) {
             return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
         }
-    
+
         return 'soon';
     }
-    
-    
 
-    private function getPastString(\DateInterval $diff): string
+    /**
+     * Generate string for past dates
+     * 
+     * @param DateInterval $diff Difference between dates
+     * @return string
+     */
+    private function getPastString(DateInterval $diff): string
     {
-        // Years
         if ($diff->y > 0) {
-            $remainingMonths = $diff->m;
-            if ($remainingMonths > 0) {
-                return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . $remainingMonths . ' month' . ($remainingMonths > 1 ? 's' : '') . ' ago';
-            }
             return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
         }
-    
-        // Months
+
         if ($diff->m > 0) {
-            $remainingDays = $diff->d;
-            if ($remainingDays > 0) {
-                return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $remainingDays . ' day' . ($remainingDays > 1 ? 's' : '') . ' ago';
-            }
             return $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' ago';
         }
-    
-        // Days
+
         if ($diff->d > 0) {
-            $remainingHours = $diff->h;
-            if ($remainingHours > 0) {
-                return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $remainingHours . ' hour' . ($remainingHours > 1 ? 's' : '') . ' ago';
-            }
             return $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' ago';
         }
-    
-        // Hours
+
         if ($diff->h > 0) {
-            $remainingMinutes = $diff->i;
-            if ($remainingMinutes > 0) {
-                return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $remainingMinutes . ' minute' . ($remainingMinutes > 1 ? 's' : '') . ' ago';
-            }
             return $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' ago';
         }
-    
-        // Minutes
+
         if ($diff->i > 0) {
             return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '') . ' ago';
         }
-    
+
         return 'just now';
     }
-    
+
+    /**
+     * Format the date using a specific format
+     * 
+     * @param string $format PHP date format string
+     * @return string Formatted date string
+     */
     public function format(string $format): string
     {
         return $this->dateTime->format($format);
     }
 
+    /**
+     * Get the internal DateTime object
+     * 
+     * @return DateTime
+     */
     public function getDateTime(): DateTime
     {
         return $this->dateTime;
     }
 
+    /**
+     * Set a new timezone for the date
+     * 
+     * @param string $timezone New timezone string
+     * @return self Returns the instance for method chaining
+     */
     public function setTimezone(string $timezone): self
     {
         $this->timezone = $timezone;
@@ -167,3 +200,4 @@ class UniversalDate
         return $this;
     }
 }
+
