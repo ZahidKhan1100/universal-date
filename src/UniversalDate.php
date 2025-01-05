@@ -61,70 +61,61 @@ class UniversalDate
         $diff = $now->diff($this->dateTime);
         
         if ($interval > 0) {
-            return $this->getFutureString($diff, $interval);
+            return $this->getFutureString($diff, $now, $this->dateTime);
         }
         
         return $this->getPastString($diff);
     }
 
-    private function getFutureString(\DateInterval $diff, int $interval): string
+    private function getFutureString(\DateInterval $diff, DateTime $now, DateTime $future): string
     {
-        // Handle intervals less than 60 seconds
-        if ($interval < 60) {
+        $totalSeconds = $future->getTimestamp() - $now->getTimestamp();
+
+        // Less than 60 seconds
+        if ($totalSeconds < 60) {
             return 'soon';
         }
 
-        // Years
-        if ($diff->y > 0) {
-            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
+        // Get exact values
+        $minutes = floor($totalSeconds / 60);
+        $hours = floor($totalSeconds / 3600);
+        $days = floor($totalSeconds / 86400);
+        $months = ($diff->y * 12) + $diff->m;
+        
+        // Check partial months for rounding
+        if ($diff->d >= 15) {
+            $months++;
         }
 
-        // Calculate total months including partial months
-        $totalMonths = ($diff->y * 12) + $diff->m;
-        if ($diff->d >= 15) { // If more than half a month
-            $totalMonths++;
+        // Years calculation (12 months or more)
+        if ($months >= 12 || $diff->y > 0) {
+            $years = max($diff->y, floor($months / 12));
+            return 'in ' . $years . ' year' . ($years > 1 ? 's' : '');
         }
 
-        // 12 or more months should be shown as 1 year
-        if ($totalMonths >= 12) {
-            return 'in 1 year';
+        // Months (30 days or more)
+        if ($months > 0 || $days >= 30) {
+            $monthCount = $months > 0 ? $months : 1;
+            return 'in ' . $monthCount . ' month' . ($monthCount > 1 ? 's' : '');
         }
 
-        // Months (if we have months or 30+ days)
-        if ($diff->m > 0 || $diff->d >= 30) {
-            $months = $diff->m;
-            if ($diff->d >= 15) { // Round up month if we're past the middle
-                $months++;
-            }
-            return 'in ' . $months . ' month' . ($months > 1 ? 's' : '');
+        // Days (23 hours or more)
+        if ($hours >= 23) {
+            $dayCount = $hours >= 23.5 ? ceil($hours / 24) : floor($hours / 24);
+            return 'in ' . $dayCount . ' day' . ($dayCount > 1 ? 's' : '');
         }
 
-        // Calculate total hours
-        $totalHours = ($diff->d * 24) + $diff->h;
-        $extraMinutes = $diff->i;
-
-        // Days (23+ hours should show as next day)
-        if ($totalHours >= 23 && $extraMinutes >= 30) {
-            $days = $diff->d + 1;
-            return 'in ' . $days . ' day' . ($days > 1 ? 's' : '');
-        }
-
-        if ($diff->d > 0) {
-            return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
-        }
-
-        // Hours (45+ minutes should show as next hour)
-        if ($diff->h > 0 || $diff->i >= 45) {
-            $hours = $diff->h;
-            if ($diff->i >= 45) {
-                $hours++;
-            }
-            return 'in ' . $hours . ' hour' . ($hours > 1 ? 's' : '');
+        // Hours (45 minutes or more)
+        if ($minutes >= 45) {
+            $hourCount = ceil($minutes / 60);
+            return 'in ' . $hourCount . ' hour' . ($hourCount > 1 ? 's' : '');
         }
 
         // Minutes
-        if ($diff->i > 0) {
-            return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
+        if ($minutes > 0) {
+            $exactMinutes = $totalSeconds / 60;
+            $roundedMinutes = $exactMinutes >= 1 ? round($exactMinutes) : ceil($exactMinutes);
+            return 'in ' . $roundedMinutes . ' minute' . ($roundedMinutes > 1 ? 's' : '');
         }
 
         return 'in 1 minute';
