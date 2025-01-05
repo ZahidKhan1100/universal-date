@@ -37,6 +37,19 @@ class UniversalDate
     }
 
     /**
+    * Static constructor method
+    * 
+    * @param string|int|DateTime $date Input date in any format
+    * @param string|null $timezone Timezone (default: UTC)
+    * @return static
+    * @throws Exception If date parsing fails
+    */
+    public static function make($date = 'now', ?string $timezone = 'UTC'): static
+    {
+        return new static($date, $timezone);
+    }
+
+    /**
      * Parse various date formats into DateTime object
      * 
      * @param string|int|DateTime $date
