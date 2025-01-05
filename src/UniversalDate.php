@@ -61,64 +61,59 @@ class UniversalDate
         $diff = $now->diff($this->dateTime);
         
         if ($interval > 0) {
-            return $this->getFutureString($diff, $now, $this->dateTime);
+            return $this->getFutureString($diff, $interval);
         }
         
         return $this->getPastString($diff);
     }
 
-    private function getFutureString(\DateInterval $diff, DateTime $now, DateTime $future): string
+    private function getFutureString(\DateInterval $diff, int $interval): string
     {
-        $totalSeconds = $future->getTimestamp() - $now->getTimestamp();
-
         // Less than 60 seconds
-        if ($totalSeconds < 60) {
+        if ($interval < 60) {
             return 'soon';
         }
 
         // Get exact values
-        $minutes = floor($totalSeconds / 60);
-        $hours = floor($totalSeconds / 3600);
-        $days = floor($totalSeconds / 86400);
+        $totalMinutes = floor($interval / 60);
+        $totalHours = floor($interval / 3600);
+        $totalDays = floor($interval / 86400);
+
+        // Calculate months more precisely
         $months = ($diff->y * 12) + $diff->m;
-        
-        // Check partial months for rounding
         if ($diff->d >= 15) {
             $months++;
         }
 
-        // Years calculation (12 months or more)
-        if ($months >= 12 || $diff->y > 0) {
-            $years = max($diff->y, floor($months / 12));
+        // Years (12+ months)
+        if ($months >= 11 && $diff->d >= 15) {
+            $years = max(1, $diff->y);
             return 'in ' . $years . ' year' . ($years > 1 ? 's' : '');
         }
 
-        // Months (30 days or more)
-        if ($months > 0 || $days >= 30) {
-            $monthCount = $months > 0 ? $months : 1;
-            return 'in ' . $monthCount . ' month' . ($monthCount > 1 ? 's' : '');
+        // Months (30+ days)
+        if ($months > 0 || $totalDays >= 30) {
+            return 'in ' . $months . ' month' . ($months > 1 ? 's' : '');
         }
 
-        // Days (23 hours or more)
-        if ($hours >= 23) {
-            $dayCount = $hours >= 23.5 ? ceil($hours / 24) : floor($hours / 24);
-            return 'in ' . $dayCount . ' day' . ($dayCount > 1 ? 's' : '');
+        // Days (23+ hours)
+        if ($totalHours >= 23) {
+            if ($totalHours == 23 && $diff->i < 30) {
+                return 'in 23 hours';
+            }
+            return 'in ' . ($totalDays + 1) . ' day' . ($totalDays + 1 > 1 ? 's' : '');
         }
 
-        // Hours (45 minutes or more)
-        if ($minutes >= 45) {
-            $hourCount = ceil($minutes / 60);
-            return 'in ' . $hourCount . ' hour' . ($hourCount > 1 ? 's' : '');
+        // Hours (45+ minutes)
+        if ($totalMinutes >= 45) {
+            if ($diff->i >= 45) {
+                return 'in ' . ($totalHours + 1) . ' hour' . ($totalHours + 1 > 1 ? 's' : '');
+            }
+            return 'in ' . $totalHours . ' hour' . ($totalHours > 1 ? 's' : '');
         }
 
         // Minutes
-        if ($minutes > 0) {
-            $exactMinutes = $totalSeconds / 60;
-            $roundedMinutes = $exactMinutes >= 1 ? round($exactMinutes) : ceil($exactMinutes);
-            return 'in ' . $roundedMinutes . ' minute' . ($roundedMinutes > 1 ? 's' : '');
-        }
-
-        return 'in 1 minute';
+        return 'in ' . $totalMinutes . ' minute' . ($totalMinutes > 1 ? 's' : '');
     }
 
     private function getPastString(\DateInterval $diff): string
