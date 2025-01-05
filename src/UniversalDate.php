@@ -145,7 +145,7 @@ class UniversalDate
      * @param \DateInterval $diff
      * @return string
      */
-    private function getFutureString(\\DateInterval $diff): string
+    private function getFutureString(\DateInterval $diff): string
     {
         // Calculate total minutes/hours/days for accurate thresholds
         $totalMinutes = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
@@ -186,7 +186,6 @@ class UniversalDate
         }
         
         return 'soon';
-    }
     }
 
     /**
