@@ -145,28 +145,48 @@ class UniversalDate
      * @param \DateInterval $diff
      * @return string
      */
-    private function getFutureString(\DateInterval $diff): string
+    private function getFutureString(\\DateInterval $diff): string
     {
-        if ($diff->y > 0) return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
-        if ($diff->m > 0) return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '');
-        if ($diff->d > 0) return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
+        // Calculate total minutes/hours/days for accurate thresholds
+        $totalMinutes = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
+        $totalHours = $totalMinutes / 60;
+        $totalDays = $totalMinutes / (24 * 60);
         
-        // Calculate total minutes for better hour handling
-        $totalMinutes = ($diff->h * 60) + $diff->i;
-        
-        // If it's 45 minutes or more until next hour, show "in 1 hour"
-        if ($totalMinutes >= 45 && $totalMinutes < 120) {
-            return 'in 1 hour';
+        // Years
+        if ($diff->y > 0) {
+            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
         }
         
-        if ($diff->h > 0) {
-            return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
+        // Months (only if more than 30 days)
+        if ($diff->m > 0 || $totalDays >= 30) {
+            $months = $diff->m + floor($totalDays / 30);
+            return 'in ' . $months . ' month' . ($months > 1 ? 's' : '');
         }
         
-        if ($diff->i > 1) return 'in ' . $diff->i . ' minutes';
-        if ($diff->i == 1) return 'in 1 minute';
+        // Days (show if more than 24 hours)
+        if ($totalHours >= 24) {
+            $days = floor($totalDays);
+            return 'in ' . $days . ' day' . ($days > 1 ? 's' : '');
+        }
+        
+        // Hours (show for 45+ minutes)
+        if ($totalMinutes >= 45) {
+            $hours = ceil($totalHours);
+            return 'in ' . $hours . ' hour' . ($hours > 1 ? 's' : '');
+        }
+        
+        // Minutes (show for 2+ minutes)
+        if ($totalMinutes >= 2) {
+            return 'in ' . floor($diff->i) . ' minutes';
+        }
+        
+        // Very near future
+        if ($totalMinutes >= 1) {
+            return 'in 1 minute';
+        }
         
         return 'soon';
+    }
     }
 
     /**

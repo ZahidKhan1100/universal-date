@@ -57,28 +57,42 @@ class UniversalDateTest extends TestCase
 
     public function it_handles_time_ago_for_future_dates()
     {
-        $date = new UniversalDate('2024-01-01 12:00:00');
-        
-        // Test different future intervals
+        // Test very near future
         $this->assertEquals('soon', UniversalDate::make('+10 seconds')->toTimeAgo());
+        $this->assertEquals('soon', UniversalDate::make('+45 seconds')->toTimeAgo());
+        
+        // Test minutes
         $this->assertEquals('in 1 minute', UniversalDate::make('+1 minute')->toTimeAgo());
+        $this->assertEquals('in 30 minutes', UniversalDate::make('+30 minutes')->toTimeAgo());
         
-        // Test hour scenarios
+        // Test hours and their boundaries
         $this->assertEquals('in 1 hour', UniversalDate::make('+45 minutes')->toTimeAgo());
-        $this->assertEquals('in 1 hour', UniversalDate::make('+1 hour')->toTimeAgo());
-        $this->assertEquals('in 2 hours', UniversalDate::make('+2 hours')->toTimeAgo());
-        
-        // Test edge cases around hour boundaries
         $this->assertEquals('in 1 hour', UniversalDate::make('+59 minutes')->toTimeAgo());
+        $this->assertEquals('in 1 hour', UniversalDate::make('+1 hour')->toTimeAgo());
+        $this->assertEquals('in 1 hour', UniversalDate::make('+1 hour 15 minutes')->toTimeAgo());
         $this->assertEquals('in 2 hours', UniversalDate::make('+1 hour 45 minutes')->toTimeAgo());
-        $this->assertEquals('in 1 day', UniversalDate::make('+1 day')->toTimeAgo());
-        $this->assertEquals('in 1 month', UniversalDate::make('+1 month')->toTimeAgo());
-        $this->assertEquals('in 1 year', UniversalDate::make('+1 year')->toTimeAgo());
+        $this->assertEquals('in 2 hours', UniversalDate::make('+2 hours')->toTimeAgo());
+        $this->assertEquals('in 23 hours', UniversalDate::make('+23 hours')->toTimeAgo());
         
-        // Test plural forms
+        // Test days and their boundaries
+        $this->assertEquals('in 1 day', UniversalDate::make('+24 hours')->toTimeAgo());
+        $this->assertEquals('in 1 day', UniversalDate::make('+25 hours')->toTimeAgo());
+        $this->assertEquals('in 1 day', UniversalDate::make('+1 day')->toTimeAgo());
         $this->assertEquals('in 2 days', UniversalDate::make('+2 days')->toTimeAgo());
-        $this->assertEquals('in 3 months', UniversalDate::make('+3 months')->toTimeAgo());
+        $this->assertEquals('in 6 days', UniversalDate::make('+6 days')->toTimeAgo());
+        
+        // Test months and their boundaries
+        $this->assertEquals('in 1 month', UniversalDate::make('+7 days')->toTimeAgo());
+        $this->assertEquals('in 1 month', UniversalDate::make('+30 days')->toTimeAgo());
+        $this->assertEquals('in 1 month', UniversalDate::make('+1 month')->toTimeAgo());
+        $this->assertEquals('in 2 months', UniversalDate::make('+2 months')->toTimeAgo());
+        $this->assertEquals('in 11 months', UniversalDate::make('+11 months')->toTimeAgo());
+        
+        // Test years and their boundaries
+        $this->assertEquals('in 1 year', UniversalDate::make('+12 months')->toTimeAgo());
+        $this->assertEquals('in 1 year', UniversalDate::make('+1 year')->toTimeAgo());
         $this->assertEquals('in 2 years', UniversalDate::make('+2 years')->toTimeAgo());
+        $this->assertEquals('in 5 years', UniversalDate::make('+5 years')->toTimeAgo());
     }
 
     /** @test */
