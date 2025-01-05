@@ -6,15 +6,6 @@ use DateTime;
 use DateTimeZone;
 use Exception;
 
-/**
- * UniversalDate class for handling various date formats and conversions
- * 
- * This class provides methods to convert and format dates in various ways including
- * human readable formats, time ago representations, and specific format conversions.
- * 
- * @package MuhammadZahid\UniversalDate
- * @author Muhammad Zahid
- */
 class UniversalDate
 {
     /** @var DateTime */
@@ -23,39 +14,17 @@ class UniversalDate
     /** @var string */
     private $timezone;
 
-    /**
-     * Constructor
-     * 
-     * @param string|int|DateTime $date Input date in any format
-     * @param string|null $timezone Timezone (default: UTC)
-     * @throws Exception If date parsing fails
-     */
     public function __construct($date = 'now', ?string $timezone = 'UTC')
     {
         $this->timezone = $timezone;
         $this->parseDate($date);
     }
 
-    /**
-     * Static constructor method
-     * 
-     * @param string|int|DateTime $date Input date in any format
-     * @param string|null $timezone Timezone (default: UTC)
-     * @return static
-     * @throws Exception If date parsing fails
-     */
     public static function make($date = 'now', ?string $timezone = 'UTC'): static
     {
         return new static($date, $timezone);
     }
 
-    /**
-     * Parse various date formats into DateTime object
-     * 
-     * @param string|int|DateTime $date
-     * @return void
-     * @throws Exception
-     */
     private function parseDate($date): void
     {
         if ($date instanceof DateTime) {
@@ -76,12 +45,6 @@ class UniversalDate
         }
     }
 
-    /**
-     * Convert date to human readable format
-     * 
-     * @param string $format Custom format string (optional)
-     * @return string
-     */
     public function toHuman(?string $format = null): string
     {
         if ($format) {
@@ -91,11 +54,6 @@ class UniversalDate
         return $this->dateTime->format('F j, Y \a\t g:i A');
     }
 
-    /**
-     * Convert to time ago format (e.g., "2 hours ago")
-     * 
-     * @return string
-     */
     public function toTimeAgo(): string
     {
         $now = new DateTime('now', new DateTimeZone($this->timezone));
@@ -109,13 +67,6 @@ class UniversalDate
         return $this->getPastString($diff);
     }
 
-    /**
-     * Get future time difference string
-     * 
-     * @param \DateInterval $diff
-     * @param int $interval Seconds until the future date
-     * @return string
-     */
     private function getFutureString(\DateInterval $diff, int $interval): string
     {
         // Show 'soon' only for less than 60 seconds
@@ -158,14 +109,7 @@ class UniversalDate
         $minutes = max(1, round($totalMinutes));
         return 'in ' . $minutes . ' minute' . ($minutes > 1 ? 's' : '');
     }
-    }
 
-    /**
-     * Get past time difference string
-     * 
-     * @param \DateInterval $diff
-     * @return string
-     */
     private function getPastString(\DateInterval $diff): string
     {
         if ($diff->y > 0) return $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' ago';
@@ -177,33 +121,16 @@ class UniversalDate
         return 'just now';
     }
 
-    /**
-     * Format date to specific format
-     * 
-     * @param string $format PHP date format string
-     * @return string
-     */
     public function format(string $format): string
     {
         return $this->dateTime->format($format);
     }
 
-    /**
-     * Get DateTime instance
-     * 
-     * @return DateTime
-     */
     public function getDateTime(): DateTime
     {
         return $this->dateTime;
     }
 
-    /**
-     * Set timezone
-     * 
-     * @param string $timezone
-     * @return self
-     */
     public function setTimezone(string $timezone): self
     {
         $this->timezone = $timezone;
