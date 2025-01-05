@@ -150,11 +150,24 @@ class UniversalDate
         if ($diff->y > 0) return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
         if ($diff->m > 0) return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '');
         if ($diff->d > 0) return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
-        if ($diff->h > 0) return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
+        
+        // Calculate total minutes for better hour handling
+        $totalMinutes = ($diff->h * 60) + $diff->i;
+        
+        // If it's 45 minutes or more until next hour, show "in 1 hour"
+        if ($totalMinutes >= 45 && $totalMinutes < 120) {
+            return 'in 1 hour';
+        }
+        
+        if ($diff->h > 0) {
+            return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
+        }
+        
         if ($diff->i > 1) return 'in ' . $diff->i . ' minutes';
         if ($diff->i == 1) return 'in 1 minute';
         
         return 'soon';
+    }
     }
 
     /**

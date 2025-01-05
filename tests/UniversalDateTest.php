@@ -62,7 +62,15 @@ class UniversalDateTest extends TestCase
         // Test different future intervals
         $this->assertEquals('soon', UniversalDate::make('+10 seconds')->toTimeAgo());
         $this->assertEquals('in 1 minute', UniversalDate::make('+1 minute')->toTimeAgo());
+        
+        // Test hour scenarios
+        $this->assertEquals('in 1 hour', UniversalDate::make('+45 minutes')->toTimeAgo());
+        $this->assertEquals('in 1 hour', UniversalDate::make('+1 hour')->toTimeAgo());
         $this->assertEquals('in 2 hours', UniversalDate::make('+2 hours')->toTimeAgo());
+        
+        // Test edge cases around hour boundaries
+        $this->assertEquals('in 1 hour', UniversalDate::make('+59 minutes')->toTimeAgo());
+        $this->assertEquals('in 2 hours', UniversalDate::make('+1 hour 45 minutes')->toTimeAgo());
         $this->assertEquals('in 1 day', UniversalDate::make('+1 day')->toTimeAgo());
         $this->assertEquals('in 1 month', UniversalDate::make('+1 month')->toTimeAgo());
         $this->assertEquals('in 1 year', UniversalDate::make('+1 year')->toTimeAgo());
