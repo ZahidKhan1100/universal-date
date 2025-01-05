@@ -118,43 +118,46 @@ class UniversalDate
      */
     private function getFutureString(\DateInterval $diff, int $interval): string
     {
-        // If less than 2 minutes away
-        if ($interval < 120) {
+        // Show 'soon' only for less than 60 seconds
+        if ($interval < 60) {
             return 'soon';
         }
 
-        // Calculate exact values
+        // Calculate exact values using total minutes as base
         $totalMinutes = ($diff->days * 24 * 60) + ($diff->h * 60) + $diff->i;
         $totalHours = $totalMinutes / 60;
-        $totalDays = $diff->days;
-        $totalMonths = ($diff->y * 12) + $diff->m;
+        $totalDays = $totalMinutes / (24 * 60);
+        $totalMonths = $totalMinutes / (30 * 24 * 60);
+        $totalYears = $totalMonths / 12;
 
-        // Years
-        if ($totalMonths >= 23) {
-            $years = floor($totalMonths / 12);
+        // Years (if 11.5+ months)
+        if ($totalMonths >= 11.5) {
+            $years = round($totalYears);
             return 'in ' . $years . ' year' . ($years > 1 ? 's' : '');
         }
 
-        // Months (if more than 30 days)
-        if ($totalDays >= 30) {
-            $months = ceil($totalDays / 30);
+        // Months (if 29.5+ days)
+        if ($totalDays >= 29.5) {
+            $months = round($totalMonths);
             return 'in ' . $months . ' month' . ($months > 1 ? 's' : '');
         }
 
-        // Days (if more than 23 hours)
+        // Days (if 23.5+ hours)
         if ($totalHours >= 23.5) {
-            $days = ceil($totalHours / 24);
+            $days = round($totalDays);
             return 'in ' . $days . ' day' . ($days > 1 ? 's' : '');
         }
 
-        // Hours (if more than 90 minutes)
-        if ($totalMinutes >= 90) {
-            $hours = ceil($totalMinutes / 60);
+        // Hours (if 45+ minutes)
+        if ($totalMinutes >= 45) {
+            $hours = round($totalHours);
             return 'in ' . $hours . ' hour' . ($hours > 1 ? 's' : '');
         }
 
-        // Minutes
-        return 'in ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
+        // Minutes (for anything 1 minute or more)
+        $minutes = max(1, round($totalMinutes));
+        return 'in ' . $minutes . ' minute' . ($minutes > 1 ? 's' : '');
+    }
     }
 
     /**
