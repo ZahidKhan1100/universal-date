@@ -3,7 +3,7 @@
     "description": "This package will convert any type of date to human readable date",
     "type": "library",
     "require": {
-        "php": "^7.4",
+        "php": "^7.4|^8.0",
         "illuminate/support": "^8.0|^9.0|^10.0"
     },
     "require-dev": {
