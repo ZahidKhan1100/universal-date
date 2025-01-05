@@ -2,6 +2,7 @@
 
 namespace MuhammadZahid\UniversalDate;
 
+use DateInterval;
 use DateTime;
 use DateTimeZone;
 use Exception;
@@ -60,49 +61,37 @@ class UniversalDate
         $diff = $now->diff($this->dateTime);
     
         if ($this->dateTime > $now) {
-            return $this->getFutureString($diff);
+            return $this->getFutureString($diff, $now);
         }
     
         return $this->getPastString($diff);
     }
     
 
-    private function getFutureString(\DateInterval $diff): string
+    private function getFutureString(\DateInterval $diff, DateTime $now): string
     {
-        // Years
+        // Handle Years (with precise day calculations)
         if ($diff->y > 0) {
-            $remainingMonths = $diff->m;
-            if ($remainingMonths > 0) {
-                return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . $remainingMonths . ' month' . ($remainingMonths > 1 ? 's' : '');
-            }
-            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '');
+            // Add the days of the remaining month
+            $remainingDaysInYear = $now->diff($this->dateTime->add(new DateInterval("P" . $diff->y . "Y")))->days;
+            $remainingMonths = $remainingDaysInYear / 30;
+            return 'in ' . $diff->y . ' year' . ($diff->y > 1 ? 's' : '') . ' and ' . ceil($remainingMonths) . ' month' . ($remainingMonths > 1 ? 's' : '');
         }
     
-        // Months
+        // Handle Months (with precise day calculations)
         if ($diff->m > 0) {
-            $remainingDays = $diff->d;
-            if ($remainingDays > 0) {
-                return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $remainingDays . ' day' . ($remainingDays > 1 ? 's' : '');
-            }
-            return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '');
+            // Add days to months for more accurate calculation
+            return 'in ' . $diff->m . ' month' . ($diff->m > 1 ? 's' : '') . ' and ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
         }
     
-        // Days
+        // Handle Days
         if ($diff->d > 0) {
-            $remainingHours = $diff->h;
-            if ($remainingHours > 0) {
-                return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $remainingHours . ' hour' . ($remainingHours > 1 ? 's' : '');
-            }
-            return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '');
+            return 'in ' . $diff->d . ' day' . ($diff->d > 1 ? 's' : '') . ' and ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
         }
     
-        // Hours
+        // Handle Hours and Minutes
         if ($diff->h > 0) {
-            $remainingMinutes = $diff->i;
-            if ($remainingMinutes > 0) {
-                return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $remainingMinutes . ' minute' . ($remainingMinutes > 1 ? 's' : '');
-            }
-            return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '');
+            return 'in ' . $diff->h . ' hour' . ($diff->h > 1 ? 's' : '') . ' and ' . $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
         }
     
         // Minutes
@@ -112,6 +101,7 @@ class UniversalDate
     
         return 'soon';
     }
+    
     
 
     private function getPastString(\DateInterval $diff): string
