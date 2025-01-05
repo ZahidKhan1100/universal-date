@@ -168,10 +168,10 @@ class UniversalDate
         
         return 'soon';
     }
-    }
 
     /**
-     * Format date to specific format
+    * Format date to specific format
+    * 
      * 
      * @param string $format PHP date format string
      * @return string
